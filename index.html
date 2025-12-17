@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Similarity Spectrum | Premium Edition</title>
+
+<style>
+:root {
+  --bg: #050608;
+  --accent: #6366f1;
+  --accent-glow: rgba(99, 102, 241, 0.2);
+  --fg: #ffffff;
+  --muted: #64748b;
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  /* integrated: lowkey dark cinematic gradients (purple + red) */
+  background:
+    radial-gradient(1200px 600px at 12% 18%, rgba(124, 58, 237, 0.14), transparent 55%),
+    radial-gradient(1000px 500px at 88% 82%, rgba(244, 63, 94, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 50% 95%, rgba(168, 85, 247, 0.06), transparent 65%),
+    linear-gradient(180deg, #040406 0%, #07080d 100%);
+  color: var(--fg);
+  font-family: var(--font-main);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+
+  /* optional: very slow ambient drift */
+  animation: ambientShift 60s ease-in-out infinite;
+}
+
+@keyframes ambientShift {
+  0%, 100% { background-position: 0% 0%, 100% 100%, 50% 100%, 0% 0%; }
+  50% { background-position: 5% 3%, 95% 97%, 50% 95%, 0% 0%; }
+}
+
+/* Layered Scene Management */
+.stage {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10vw;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px) scale(0.98);
+  transition: opacity 0.8s cubic-bezier(0.2, 0, 0.2, 1),
+              transform 0.8s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.scene.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateY(0) scale(1);
+}
+
+/* Typography & Visuals */
+h1 {
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, #fff 0%, #64748b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 0.9;
+  margin-bottom: 2rem;
+}
+
+.card {
+  width: min(900px, 100%);
+  position: relative;
+}
+
+.glass-box {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
+
+/* References */
+.refs-container {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+}
+
+.ref-card {
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.ref-card img {
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  margin-bottom: 20px;
+  filter: grayscale(0.5);
+  transition: filter 0.5s ease;
+}
+
+.ref-card:hover img { filter: grayscale(0); }
+
+/* Target Section */
+.target-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.target-avatar {
+  width: 100px; height: 100px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+}
+
+.excerpt-container {
+  position: relative;
+  overflow: hidden;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  font-weight: 300;
+}
+
+.mask {
+  position: absolute;
+  inset: 0;
+  background: #0d0e12;
+  transform-origin: bottom;
+  transition: transform 1.2s cubic-bezier(0.7, 0, 0.3, 1);
+}
+
+.revealed .mask { transform: scaleY(0); }
+
+/* Bottom Spectrum UI */
+.spectrum-dock {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 25vh;
+  padding: 0 10vw;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: all 1s ease;
+}
+
+.spectrum-dock.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rail {
+  position: absolute;
+  bottom: 80px;
+  left: 10vw; right: 10vw;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--glass-border) 20%, var(--glass-border) 80%, transparent);
+}
+
+.anchor {
+  position: absolute;
+  bottom: 60px;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.anchor img {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+}
+
+.anchor.left { left: 10vw; }
+.anchor.right { left: 90vw; }
+
+/* The Token */
+.token {
+  position: absolute;
+  bottom: 85px;
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+  transform: translateX(-50%);
+  transition: left 1s cubic-bezier(0.34, 1.56, 0.64, 1),
+              bottom 1s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.5s ease;
+  z-index: 100;
+}
+
+.token img { width: 100%; height: 100%; border-radius: 50%; }
+
+/* Evidence */
+.evidence-item {
+  margin-top: 15px;
+  padding: 12px 20px;
+  border-left: 2px solid var(--accent);
+  background: rgba(255,255,255,0.02);
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.evidence-item.show {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.5s ease;
+}
+
+.prompt-key {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* Persistent header shown during targets and end */
+.show-header {
+  position: absolute;
+  left: 50%;
+  bottom: calc(75vh + 28px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border-radius: 999px;
+
+  /* integrated: shiny glass */
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02)),
+    rgba(20,20,30,0.55);
+
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  z-index: 200;
+}
+
+.show-header.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.show-header img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+
+  /* integrated: embedded feel without forcing your rounded choice */
+  /* border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.2),
+    0 2px 10px rgba(0,0,0,0.35); */
+}
+
+.show-header .title {
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+
+  /* integrated: etched-in-glass text */
+  color: rgba(230,230,255,0.9);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.25),
+    0 -1px 0 rgba(0,0,0,0.4);
+
+  white-space: nowrap;
+}
+</style>
+</head>
+
+<body>
+
+<div class="stage">
+
+  <section class="scene active" id="scene-cover">
+    <div class="card" style="text-align: center;">
+      <p style="letter-spacing: 0.5em; color: var(--accent); margin-bottom: 1rem;">JeggNog 2025</p>
+      <h1>Ça sonne qui?</h1>
+      <p style="color: var(--muted); font-size: 1.5rem;">Les figures importantes suivantes ressemble le plus à...</p>
+    </div>
+    <div class="prompt-key">Go</div>
+  </section>
+
+  <section class="scene" id="scene-refs">
+    <div class="card">
+      <div class="refs-container">
+        <div class="ref-card">
+          <img src="https://www.sensum.umontreal.ca/files/sites/207/2022/07/Photo-Gosselin.jpg" alt="Ref A">
+          <h2 id="refAName">--</h2>
+          <p class="muted" id="refAVoice">--</p>
+        </div>
+        <div class="ref-card" style="margin-top: 40px;">
+          <img src="https://nouvelles.umontreal.ca/public/nouvelles/_processed_/b/0/csm_20250805_ian-charest_59965f824b.jpg" alt="Ref B">
+          <h2 id="refBName">--</h2>
+          <p class="muted" id="refBVoice">--</p>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-key">Calculs des patrons vocabularistiques...</div>
+  </section>
+
+  <section class="scene" id="scene-target">
+    <div class="card glass-box">
+      <div class="target-header">
+        <img class="target-avatar" id="targetImg" src="">
+        <div>
+          <h2 id="targetTitle">Target</h2>
+          <!-- <p style="color: var(--accent)">Pattern Match Analysis</p> -->
+        </div>
+      </div>
+
+      <div class="excerpt-container" id="excerptParent">
+        <p id="targetText">Text...</p>
+        <div class="mask"></div>
+      </div>
+
+      <div id="evidenceList" style="margin-top: 2rem;"></div>
+    </div>
+    <div class="prompt-key" id="targetPrompt">Tap to analyze</div>
+  </section>
+
+  <section class="scene" id="scene-end">
+    <div class="card" style="text-align: center;">
+      <h1>Analysis Complete</h1>
+      <p class="muted">All vectors mapped.</p>
+    </div>
+    <div class="prompt-key">Press R to reset</div>
+  </section>
+
+  <div class="show-header" id="showHeader">
+    <img id="showHeaderImg" src="" alt="">
+    <div class="title" id="showHeaderTitle">Ça sonne qui?</div>
+  </div>
+
+  <div class="spectrum-dock" id="spectrum">
+    <div class="rail"></div>
+    <div class="anchor left">
+      <img id="railRefAImg" src="">
+    </div>
+    <div class="anchor right">
+      <img id="railRefBImg" src="">
+    </div>
+    <div id="tokenLayer"></div>
+  </div>
+
+</div>
+
+<script>
+const DECK = {
+
+  show: {
+    title: "JeggNog 2025",
+    img: "https://images.vexels.com/media/users/3/133752/isolated/preview/fcf52ff7efa0c1e16b42e41ea75597a7-mistletoe-icon-28.png"
+  },
+
+  references: {
+    A: { name: "Frédéric", img: "https://www.sensum.umontreal.ca/files/sites/207/2022/07/Photo-Gosselin.jpg" },
+    B: { name: "Ian", img: "https://nouvelles.umontreal.ca/public/nouvelles/_processed_/b/0/csm_20250805_ian-charest_59965f824b.jpg" }
+  },
+
+  targets: [
+    { label: "Marcus Aurelius",
+      img: "https://hips.hearstapps.com/hmg-prod/images/marcus-aurelius-gettyimages-122316830.jpg?crop=1xw:1.0xh;center,top&resize=640:*",
+      text: "We should consider the data points before making a final determination.",
+      position: 0.65,
+      evidence: ["Analytical framing"]
+    },
+    { label: "Martin Luther King Jr.",
+      img: "https://upload.wikimedia.org/wikipedia/commons/8/84/Martin_Luther_King_Jr_NYWTS.jpg",
+      text: "We should consider the data points before making a final determination.",
+      position: 0.35,
+      evidence: ["Analytical framing"]
+    },
+    { label: "Karl Friston",
+      img: "https://media.wired.com/photos/5be3712d72ce4c601115b2f8/1:1/w_1642,h_1642,c_limit/Karl_Friston_24349.jpg",
+      text: "The architectural integrity of the system relies on the strict adherence to established protocols.",
+      position: 0.18,
+      evidence: ["Strict syntax", "Industry terminology"]
+    },
+    { label: "Stephen Hawking",
+      img: "https://www.premiosfronterasdelconocimiento.es/wp-content/uploads/sites/2/2017/05/FBBVA-15-ciencia-Stephen-Hawking.jpg",
+      text: "It's like a dance, you know? You gotta feel the rhythm of the room and just go with it.",
+      position: 0.82,
+      evidence: ["Colloquial 'gotta'", "Abstract metaphor"]
+    },
+    { label: "Mao Zedong",
+      img: "https://upload.wikimedia.org/wikipedia/commons/0/07/Mao_Zedong_1950_Portait_%283x4_cropped%29.jpg",
+      text: "We should consider the data points before making a final determination.",
+      position: 0.43,
+      evidence: ["Analytical framing"]
+    },
+    { label: "Albert Einstein",
+      img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQEEw7e0uEqfH-31jevGZU4WKdknJruD50Xw&s",
+      text: "We should consider the data points before making a final determination.",
+      position: 0.35,
+      evidence: ["Analytical framing"]
+    },
+    { label: "Nelson Mandela",
+      img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtPDf7rujtju3-H-gw3XQhXtyL10673m9jEw&s",
+      text: "We should consider the data points before making a final determination.",
+      position: 0.73,
+      evidence: ["Analytical framing"]
+    }
+  ]
+};
+
+/*
+Phases:
+cover -> refs -> target -> end
+
+Within target:
+step 0: target shown, text revealed, token wandering (automatic)
+step 1: token settled (on advance)
+step 2: evidence shown (on advance)
+step 3: move to next target (handled inside advance)
+*/
+
+let state = {
+  phase: "cover",
+  targetIndex: -1,
+  step: 0,
+  wanderInterval: null
+};
+
+// UI refs
+const scenes = {
+  cover: document.getElementById("scene-cover"),
+  refs: document.getElementById("scene-refs"),
+  target: document.getElementById("scene-target"),
+  end: document.getElementById("scene-end")
+};
+
+const tokenLayer = document.getElementById("tokenLayer");
+
+function showScene(key) {
+  Object.keys(scenes).forEach(k => scenes[k].classList.toggle("active", k === key));
+}
+
+function init() {
+  document.getElementById("refAName").textContent = DECK.references.A.name;
+  document.getElementById("refBName").textContent = DECK.references.B.name;
+  document.getElementById("refAVoice").textContent = DECK.references.A.voice || "";
+  document.getElementById("refBVoice").textContent = DECK.references.B.voice || "";
+  document.getElementById("railRefAImg").src = DECK.references.A.img;
+  document.getElementById("railRefBImg").src = DECK.references.B.img;
+
+  document.getElementById("showHeaderTitle").textContent = DECK.show?.title || "Ça sonne qui?";
+  const headerImg = document.getElementById("showHeaderImg");
+  if (DECK.show?.img) headerImg.src = DECK.show.img;
+}
+
+function stopWander() {
+  if (state.wanderInterval) clearInterval(state.wanderInterval);
+  state.wanderInterval = null;
+}
+
+function startWander(el) {
+  stopWander();
+  let t = 0;
+  state.wanderInterval = setInterval(() => {
+    t += 0.05;
+    const x = 50 + Math.sin(t) * 15; // in vw, stays within view
+    el.style.left = x + "vw";
+  }, 30);
+}
+
+function makeToken(imgUrl, id) {
+  const token = document.createElement("div");
+  token.className = "token";
+  if (id) token.id = id;
+  token.innerHTML = `<img src="${imgUrl}">`;
+  token.style.left = "50vw";
+  token.style.opacity = "1";
+  return token;
+}
+
+function placeToken(token, pos01, stackIndex) {
+  const finalX = 10 + (pos01 * 80); // 10vw..90vw
+  token.style.left = finalX + "vw";
+  token.style.bottom = (85 + (stackIndex * 15)) + "px";
+}
+
+function rebuildTokens() {
+  stopWander();
+  tokenLayer.innerHTML = "";
+
+  // Tokens for completed targets (< current target index) are always placed
+  for (let i = 0; i < Math.max(0, state.targetIndex); i++) {
+    const t = DECK.targets[i];
+    const tk = makeToken(t.img);
+    placeToken(tk, t.position, i);
+    tokenLayer.appendChild(tk);
+  }
+
+  // Current target token depends on step
+  if (state.phase === "target" && state.targetIndex >= 0 && state.targetIndex < DECK.targets.length) {
+    const t = DECK.targets[state.targetIndex];
+    const active = makeToken(t.img, "activeToken");
+    tokenLayer.appendChild(active);
+
+    if (state.step === 0) {
+      // wandering
+      active.style.opacity = "1";
+      active.style.bottom = "85px";
+      startWander(active);
+    } else {
+      // settled (and optionally evidence)
+      placeToken(active, t.position, state.targetIndex);
+    }
+  }
+}
+
+function renderTargetScene() {
+  const t = DECK.targets[state.targetIndex];
+
+  document.getElementById("targetImg").src = t.img;
+  document.getElementById("targetTitle").textContent = t.label;
+  document.getElementById("targetText").textContent = t.text;
+
+  // auto reveal excerpt now
+  document.getElementById("excerptParent").classList.add("revealed");
+
+  // evidence
+  const evidenceList = document.getElementById("evidenceList");
+  evidenceList.innerHTML = "";
+
+  if (state.step >= 2) {
+    t.evidence.forEach((e, i) => {
+      const div = document.createElement("div");
+      div.className = "evidence-item";
+      div.textContent = e;
+      evidenceList.appendChild(div);
+      setTimeout(() => div.classList.add("show"), i * 200);
+    });
+  }
+
+  // prompts
+  const prompt = document.getElementById("targetPrompt");
+  if (state.step === 0) prompt.textContent = "Guess now. Next reveals the match.";
+  if (state.step === 1) prompt.textContent = "Match found. Next shows evidence.";
+  if (state.step === 2) prompt.textContent = "Continue";
+}
+
+function goToTarget(index, step) {
+  state.phase = "target";
+  state.targetIndex = index;
+  state.step = step;
+
+  showScene("target");
+  document.getElementById("spectrum").classList.add("visible");
+  document.getElementById("showHeader").classList.add("visible");
+
+  rebuildTokens();
+  renderTargetScene();
+}
+
+function advance() {
+  if (state.phase === "cover") {
+    state.phase = "refs";
+    showScene("refs");
+    return;
+  }
+
+  if (state.phase === "refs") {
+    // go to first target, and auto start wandering + text revealed
+    goToTarget(0, 0);
+    return;
+  }
+
+  if (state.phase === "target") {
+    if (state.step === 0) {
+      state.step = 1; // settle
+      rebuildTokens();
+      renderTargetScene();
+      return;
+    }
+
+    if (state.step === 1) {
+      state.step = 2; // evidence
+      rebuildTokens();
+      renderTargetScene();
+      return;
+    }
+
+    // step 2 -> next target
+    const nextIndex = state.targetIndex + 1;
+    if (nextIndex >= DECK.targets.length) {
+      stopWander();
+      state.phase = "end";
+      showScene("end");
+      // keep header visible on end
+      document.getElementById("showHeader").classList.add("visible");
+      return;
+    }
+
+    goToTarget(nextIndex, 0);
+    return;
+  }
+
+  if (state.phase === "end") {
+    location.reload();
+  }
+}
+
+function back() {
+  if (state.phase === "refs") {
+    state.phase = "cover";
+    showScene("cover");
+    return;
+  }
+
+  if (state.phase === "target") {
+    // step back within current target
+    if (state.step === 2) {
+      state.step = 1;
+      rebuildTokens();
+      renderTargetScene();
+      return;
+    }
+
+    if (state.step === 1) {
+      state.step = 0;
+      rebuildTokens();
+      renderTargetScene();
+      return;
+    }
+
+    // step 0 -> previous target, land on evidence step for continuity
+    const prevIndex = state.targetIndex - 1;
+    if (prevIndex < 0) {
+      state.phase = "refs";
+      showScene("refs");
+      // hide spectrum and header when leaving target flow
+      document.getElementById("spectrum").classList.remove("visible");
+      document.getElementById("showHeader").classList.remove("visible");
+      stopWander();
+      tokenLayer.innerHTML = "";
+      return;
+    }
+
+    goToTarget(prevIndex, 2);
+    return;
+  }
+
+  if (state.phase === "end") {
+    // go back to last target evidence
+    goToTarget(DECK.targets.length - 1, 2);
+  }
+}
+
+// Input: click, space, enter, arrows, backspace
+window.addEventListener("mousedown", advance);
+
+window.addEventListener("keydown", e => {
+  const k = e.key;
+
+  if (k === " " || k === "Enter" || k === "ArrowRight") {
+    e.preventDefault();
+    advance();
+    return;
+  }
+
+  if (k === "ArrowLeft" || k === "Backspace") {
+    e.preventDefault();
+    back();
+    return;
+  }
+
+  if (k.toLowerCase() === "r") location.reload();
+});
+
+init();
+</script>
+
+</body>
+</html>
