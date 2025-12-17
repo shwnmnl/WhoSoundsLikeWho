@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Similarity Spectrum | Premium Edition</title>
+<title>Who Sounds Like Who | Semantic Similarity Guessing Game</title>
 
 <style>
 :root {
@@ -20,7 +20,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  /* integrated: lowkey dark cinematic gradients (purple + red) */
   background:
     radial-gradient(1200px 600px at 12% 18%, rgba(124, 58, 237, 0.14), transparent 55%),
     radial-gradient(1000px 500px at 88% 82%, rgba(244, 63, 94, 0.10), transparent 60%),
@@ -28,11 +27,9 @@ body {
     linear-gradient(180deg, #040406 0%, #07080d 100%);
   color: var(--fg);
   font-family: var(--font-main);
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
-
-  /* optional: very slow ambient drift */
   animation: ambientShift 60s ease-in-out infinite;
 }
 
@@ -44,8 +41,9 @@ body {
 /* Layered Scene Management */
 .stage {
   position: relative;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .scene {
@@ -245,7 +243,6 @@ h1 {
   padding: 12px 20px;
   border-radius: 999px;
 
-  /* integrated: shiny glass */
   background:
     linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.02)),
     rgba(20,20,30,0.55);
@@ -273,12 +270,6 @@ h1 {
   width: 28px;
   height: 28px;
   object-fit: cover;
-
-  /* integrated: embedded feel without forcing your rounded choice */
-  /* border: 1px solid rgba(255,255,255,0.35);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.2),
-    0 2px 10px rgba(0,0,0,0.35); */
 }
 
 .show-header .title {
@@ -286,7 +277,6 @@ h1 {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 
-  /* integrated: etched-in-glass text */
   color: rgba(230,230,255,0.9);
   text-shadow:
     0 1px 0 rgba(255,255,255,0.25),
@@ -294,20 +284,124 @@ h1 {
 
   white-space: nowrap;
 }
+
+/* Mobile adaptations */
+@media (max-width: 640px) {
+  .scene { padding: 0 6vw; }
+
+  .glass-box { padding: 22px; border-radius: 18px; }
+
+  .refs-container { flex-direction: column; gap: 22px; }
+  .ref-card img { width: 180px; height: 180px; }
+
+  .target-header { gap: 14px; margin-bottom: 18px; }
+  .target-avatar { width: 72px; height: 72px; border-radius: 16px; }
+
+  .excerpt-container {
+    font-size: 1.1rem;
+    line-height: 1.55;
+  }
+
+  /* Allow scrolling inside excerpt on mobile */
+  .excerpt-container {
+    max-height: 34vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 6px;
+  }
+
+  .spectrum-dock {
+    height: 30vh;
+    padding: 0 6vw;
+  }
+
+  .rail { left: 6vw; right: 6vw; }
+  .anchor.left { left: 6vw; }
+  .anchor.right { left: 94vw; }
+
+  .anchor img { width: 72px; height: 72px; }
+
+  .token { width: 46px; height: 46px; }
+
+  .show-header {
+    bottom: calc(30vh + 14px);
+    padding: 10px 14px;
+  }
+  .show-header .title { font-size: 14px; letter-spacing: 0.14em; }
+
+  .prompt-key { bottom: calc(30vh + 18px); font-size: 11px; }
+}
+
+
+.github-link {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 500;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02)),
+    rgba(20,20,30,0.45);
+  border: 1px solid rgba(255,255,255,0.14);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+  opacity: 0.9;
+
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.github-link:hover {
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
+.github-link:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+.github-link svg {
+  width: 18px;
+  height: 18px;
+  fill: rgba(230,230,255,0.92);
+}
+
+@media (max-width: 640px) {
+  .github-link { top: 12px; right: 12px; }
+}
+
+
+
 </style>
 </head>
 
 <body>
-
 <div class="stage">
+  <a class="github-link"
+    href="https://github.com/shwnmnl/WhoSoundsLikeWho"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="View on GitHub">
+    <svg viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
+    </svg>
+  </a>
 
   <section class="scene active" id="scene-cover">
     <div class="card" style="text-align: center;">
       <p style="letter-spacing: 0.5em; color: var(--accent); margin-bottom: 1rem;">JeggNog 2025</p>
-      <h1>Ça sonne qui?</h1>
-      <p style="color: var(--muted); font-size: 1.5rem;">Les figures importantes suivantes ressemble le plus à...</p>
+      <h1>Who sounds like who?</h1>
+      <p style="color: var(--muted); font-size: 1.5rem;">The following figures' speeches most resemble...</p>
+      <!-- <p class="muted" style="margin-top: 14px; font-size: 0.95rem;">Mobile: swipe left to advance, swipe right to go back</p> -->
     </div>
-    <div class="prompt-key">Go</div>
+    <div class="prompt-key">Click, Space or Arrows to start</div>
   </section>
 
   <section class="scene" id="scene-refs">
@@ -334,7 +428,6 @@ h1 {
         <img class="target-avatar" id="targetImg" src="">
         <div>
           <h2 id="targetTitle">Target</h2>
-          <!-- <p style="color: var(--accent)">Pattern Match Analysis</p> -->
         </div>
       </div>
 
@@ -356,10 +449,10 @@ h1 {
     <div class="prompt-key">Press R to reset</div>
   </section>
 
-  <div class="show-header" id="showHeader">
-    <img id="showHeaderImg" src="" alt="">
-    <div class="title" id="showHeaderTitle">Ça sonne qui?</div>
-  </div>
+  <!-- <div class="show-header" id="showHeader"> -->
+    <!-- <img id="showHeaderImg" src="" alt=""> -->
+    <!-- <div class="title" id="showHeaderTitle">JeggNog 2025</div> -->
+  <!-- </div> -->
 
   <div class="spectrum-dock" id="spectrum">
     <div class="rail"></div>
@@ -376,11 +469,10 @@ h1 {
 
 <script>
 const DECK = {
-
-  show: {
-    title: "JeggNog 2025",
-    img: "https://images.vexels.com/media/users/3/133752/isolated/preview/fcf52ff7efa0c1e16b42e41ea75597a7-mistletoe-icon-28.png"
-  },
+  // show: {
+  //   title: "JeggNog 2025",
+  //   img: "https://images.vexels.com/media/users/3/133752/isolated/preview/fcf52ff7efa0c1e16b42e41ea75597a7-mistletoe-icon-28.png"
+  // },
 
   references: {
     A: { name: "Frédéric", img: "https://www.sensum.umontreal.ca/files/sites/207/2022/07/Photo-Gosselin.jpg" },
@@ -412,12 +504,6 @@ const DECK = {
       position: 0.82,
       evidence: ["Colloquial 'gotta'", "Abstract metaphor"]
     },
-    { label: "Mao Zedong",
-      img: "https://upload.wikimedia.org/wikipedia/commons/0/07/Mao_Zedong_1950_Portait_%283x4_cropped%29.jpg",
-      text: "We should consider the data points before making a final determination.",
-      position: 0.43,
-      evidence: ["Analytical framing"]
-    },
     { label: "Albert Einstein",
       img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQQEEw7e0uEqfH-31jevGZU4WKdknJruD50Xw&s",
       text: "We should consider the data points before making a final determination.",
@@ -433,17 +519,6 @@ const DECK = {
   ]
 };
 
-/*
-Phases:
-cover -> refs -> target -> end
-
-Within target:
-step 0: target shown, text revealed, token wandering (automatic)
-step 1: token settled (on advance)
-step 2: evidence shown (on advance)
-step 3: move to next target (handled inside advance)
-*/
-
 let state = {
   phase: "cover",
   targetIndex: -1,
@@ -451,7 +526,6 @@ let state = {
   wanderInterval: null
 };
 
-// UI refs
 const scenes = {
   cover: document.getElementById("scene-cover"),
   refs: document.getElementById("scene-refs"),
@@ -460,6 +534,8 @@ const scenes = {
 };
 
 const tokenLayer = document.getElementById("tokenLayer");
+const excerptParent = document.getElementById("excerptParent");
+const excerptContainer = document.querySelector(".excerpt-container");
 
 function showScene(key) {
   Object.keys(scenes).forEach(k => scenes[k].classList.toggle("active", k === key));
@@ -473,9 +549,9 @@ function init() {
   document.getElementById("railRefAImg").src = DECK.references.A.img;
   document.getElementById("railRefBImg").src = DECK.references.B.img;
 
-  document.getElementById("showHeaderTitle").textContent = DECK.show?.title || "Ça sonne qui?";
-  const headerImg = document.getElementById("showHeaderImg");
-  if (DECK.show?.img) headerImg.src = DECK.show.img;
+  // document.getElementById("showHeaderTitle").textContent = DECK.show?.title || "JeggNog 2025";
+  // const headerImg = document.getElementById("showHeaderImg");
+  // if (DECK.show?.img) headerImg.src = DECK.show.img;
 }
 
 function stopWander() {
@@ -488,7 +564,7 @@ function startWander(el) {
   let t = 0;
   state.wanderInterval = setInterval(() => {
     t += 0.05;
-    const x = 50 + Math.sin(t) * 15; // in vw, stays within view
+    const x = 50 + Math.sin(t) * 15;
     el.style.left = x + "vw";
   }, 30);
 }
@@ -504,7 +580,7 @@ function makeToken(imgUrl, id) {
 }
 
 function placeToken(token, pos01, stackIndex) {
-  const finalX = 10 + (pos01 * 80); // 10vw..90vw
+  const finalX = 10 + (pos01 * 80);
   token.style.left = finalX + "vw";
   token.style.bottom = (85 + (stackIndex * 15)) + "px";
 }
@@ -513,7 +589,6 @@ function rebuildTokens() {
   stopWander();
   tokenLayer.innerHTML = "";
 
-  // Tokens for completed targets (< current target index) are always placed
   for (let i = 0; i < Math.max(0, state.targetIndex); i++) {
     const t = DECK.targets[i];
     const tk = makeToken(t.img);
@@ -521,19 +596,15 @@ function rebuildTokens() {
     tokenLayer.appendChild(tk);
   }
 
-  // Current target token depends on step
   if (state.phase === "target" && state.targetIndex >= 0 && state.targetIndex < DECK.targets.length) {
     const t = DECK.targets[state.targetIndex];
     const active = makeToken(t.img, "activeToken");
     tokenLayer.appendChild(active);
 
     if (state.step === 0) {
-      // wandering
-      active.style.opacity = "1";
       active.style.bottom = "85px";
       startWander(active);
     } else {
-      // settled (and optionally evidence)
       placeToken(active, t.position, state.targetIndex);
     }
   }
@@ -546,10 +617,8 @@ function renderTargetScene() {
   document.getElementById("targetTitle").textContent = t.label;
   document.getElementById("targetText").textContent = t.text;
 
-  // auto reveal excerpt now
-  document.getElementById("excerptParent").classList.add("revealed");
+  excerptParent.classList.add("revealed");
 
-  // evidence
   const evidenceList = document.getElementById("evidenceList");
   evidenceList.innerHTML = "";
 
@@ -563,7 +632,6 @@ function renderTargetScene() {
     });
   }
 
-  // prompts
   const prompt = document.getElementById("targetPrompt");
   if (state.step === 0) prompt.textContent = "Guess now. Next reveals the match.";
   if (state.step === 1) prompt.textContent = "Match found. Next shows evidence.";
@@ -577,7 +645,7 @@ function goToTarget(index, step) {
 
   showScene("target");
   document.getElementById("spectrum").classList.add("visible");
-  document.getElementById("showHeader").classList.add("visible");
+  // document.getElementById("showHeader").classList.add("visible");
 
   rebuildTokens();
   renderTargetScene();
@@ -591,33 +659,30 @@ function advance() {
   }
 
   if (state.phase === "refs") {
-    // go to first target, and auto start wandering + text revealed
     goToTarget(0, 0);
     return;
   }
 
   if (state.phase === "target") {
     if (state.step === 0) {
-      state.step = 1; // settle
+      state.step = 1;
       rebuildTokens();
       renderTargetScene();
       return;
     }
 
     if (state.step === 1) {
-      state.step = 2; // evidence
+      state.step = 2;
       rebuildTokens();
       renderTargetScene();
       return;
     }
 
-    // step 2 -> next target
     const nextIndex = state.targetIndex + 1;
     if (nextIndex >= DECK.targets.length) {
       stopWander();
       state.phase = "end";
       showScene("end");
-      // keep header visible on end
       document.getElementById("showHeader").classList.add("visible");
       return;
     }
@@ -626,9 +691,7 @@ function advance() {
     return;
   }
 
-  if (state.phase === "end") {
-    location.reload();
-  }
+  if (state.phase === "end") location.reload();
 }
 
 function back() {
@@ -639,7 +702,6 @@ function back() {
   }
 
   if (state.phase === "target") {
-    // step back within current target
     if (state.step === 2) {
       state.step = 1;
       rebuildTokens();
@@ -654,12 +716,10 @@ function back() {
       return;
     }
 
-    // step 0 -> previous target, land on evidence step for continuity
     const prevIndex = state.targetIndex - 1;
     if (prevIndex < 0) {
       state.phase = "refs";
       showScene("refs");
-      // hide spectrum and header when leaving target flow
       document.getElementById("spectrum").classList.remove("visible");
       document.getElementById("showHeader").classList.remove("visible");
       stopWander();
@@ -671,16 +731,31 @@ function back() {
     return;
   }
 
-  if (state.phase === "end") {
-    // go back to last target evidence
-    goToTarget(DECK.targets.length - 1, 2);
-  }
+  if (state.phase === "end") goToTarget(DECK.targets.length - 1, 2);
 }
 
-// Input: click, space, enter, arrows, backspace
-window.addEventListener("mousedown", advance);
+/* Click/tap guard: do not advance when interacting with excerpt (scroll/select) */
+function shouldIgnoreAdvanceFromEventTarget(target) {
+  if (!target) return false;
+  if (excerptContainer && excerptContainer.contains(target)) return true;
+  return false;
+}
 
-window.addEventListener("keydown", e => {
+window.addEventListener("mousedown", (e) => {
+  const sel = window.getSelection && window.getSelection().toString();
+  if (sel && sel.length) return;
+  if (shouldIgnoreAdvanceFromEventTarget(e.target)) return;
+  advance();
+});
+
+window.addEventListener("touchend", (e) => {
+  const target = (e.changedTouches && e.changedTouches[0] && document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)) || null;
+  if (shouldIgnoreAdvanceFromEventTarget(target)) return;
+  // taps handled by swipe logic too, so only treat very short taps as advance
+}, { passive: true });
+
+/* Keyboard nav */
+window.addEventListener("keydown", (e) => {
   const k = e.key;
 
   if (k === " " || k === "Enter" || k === "ArrowRight") {
@@ -698,8 +773,35 @@ window.addEventListener("keydown", e => {
   if (k.toLowerCase() === "r") location.reload();
 });
 
+/* Swipe nav for mobile */
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartT = 0;
+
+window.addEventListener("touchstart", (e) => {
+  const t = e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+  touchStartT = Date.now();
+}, { passive: true });
+
+window.addEventListener("touchend", (e) => {
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  const dt = Date.now() - touchStartT;
+
+  // ignore slow gestures
+  if (dt > 700) return;
+
+  // ignore mostly vertical gestures (scroll)
+  if (Math.abs(dy) > Math.abs(dx)) return;
+
+  if (dx < -60) advance();
+  if (dx > 60) back();
+}, { passive: true });
+
 init();
 </script>
-
 </body>
 </html>
